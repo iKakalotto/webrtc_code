@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>发起者</title>
+</head>
+<body>
+<h1>发起者页面</h1>
+<video id="local-video" autoplay></video>
+<script src="https://cdn.socket.io/4.3.1/socket.io.min.js"></script>
+<script src="https://lib.baomitu.com/simple-peer/9.11.1/simplepeer.min.js"></script>
+<script>
+    const socket = io();
+    const peer = new SimplePeer({ initiator: true, trickle: false });
+
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+    .then((stream) => {
+        const videoElement = document.getElementById('local-video');
+        videoElement.srcObject = stream;
+        peer.addStream(stream);
+
+        peer.on('signal', (data) => {
+            socket.emit('signal', data);
+        });
+
+        socket.on('signal', (data) => {
+            peer.signal(data);
+        });
+
+        peer.on('connect', () => {
+            console.log('连接已建立');
+        });
+
+        peer.on('stream', (stream) => {
+            console.log('接收到远程视频流');
+        });
+    }).catch((error) => {
+        console.error('获取本地视频流时发生错误:', error);
+    });
+</script>
+</body>
+</html>
